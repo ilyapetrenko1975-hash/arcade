@@ -9,6 +9,8 @@ RED = (255,0,0)
 GREEN = (0,255,0)
 
 LABEL = 'CLICK!'
+WAITS = [1,1,0.5,0.5,0.5,0.25,0.25,0.25]
+SCORES = [5,10,5,10,15,5,10,15,15]
 
 class Area:
     def __init__(self, x, y, width = 300, height = 150, color = BACK):
@@ -36,11 +38,12 @@ class Label(TextArea):
     def collidepoint(self, x, y):
         return self.rect.collidepoint(x,y)
 mv = pygame.display.set_mode((1500, 760))
-mv.fill(BACK)
+
 game = True
+level = 0
 FPS = 40
 wait = 0
-WAIT = FPS / 2
+WAIT = FPS * WAITS[level]
 areas = []
 for x in [200,1000]:
     for y in [500,100]:
@@ -49,9 +52,11 @@ for x in [200,1000]:
 clock = pygame.time.Clock()
 score_label = TextArea(0,0,300,50)
 time_label = TextArea(1200,0,300,50)
+level_label = TextArea(600,0,300,50)
 game_over_label = TextArea(0,0,1500,760, color=RED)
 win_label = TextArea(0,0,1500,760, color=GREEN)
-reload = Label(500,450,250,100)
+reload = Label(570,450,250,100)
+new_level = Label(570,600,250,100)
 
 x,y = 0,0
 score = 0
@@ -59,6 +64,8 @@ time = 0
 while game:
     pygame.display.update()
     clock.tick(FPS)
+    mv.fill(BACK)
+    reload.fill_color = YELLOW
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -74,9 +81,31 @@ while game:
                     else:
                         box.fill_color = RED 
                         score -= 1
-    if score >= 5:
+            if reload.collidepoint(x,y):
+                score = 0
+                game = True
+                time = 0
+                reload.fill_color = GREEN
+                reload.draw(shift_x=10, shift_y=20)
+                continue
+            if new_level.collidepoint(x,y):
+                score = 0 
+                game = True
+                time = 0
+                new_level.fill_color = YELLOW
+                new_level.set_text('Next level')
+                new_level.draw(shift_x=10, shift_y=20)
+                level += 1
+                continue
+
+    if score >= SCORES[level]:
         win_label.set_text('YOU \'RE WINNER CHAMPION!', fsize=100)
         win_label.draw(shift_x = 220, shift_y = 320)
+        reload.set_text('Play again', fsize=50)
+        reload.draw(shift_x = 10, shift_y = 20)
+        if level < len(WAITS) - 1:
+            new_level.set_text('Next level', fsize=50)
+            new_level.draw(shift_x=10, shift_y=20)
         continue
     if time >= 10:
         game_over_label.set_text('Game Over',fsize=100)
@@ -88,7 +117,7 @@ while game:
     if wait == 0:
         cards = random.randint(0, len(areas) - 1)
         wait = WAIT
-        time += 0.5
+        time += WAITS[level]
     else:
         wait -= 1
     for i,box in enumerate(areas):
@@ -102,6 +131,8 @@ while game:
     score_label.draw(shift_x = 5, shift_y = 5)
     time_label.set_text(f'Время: {time} с.')
     time_label.draw(shift_x = 5, shift_y = 5)
+    level_label.set_text(f'Уровень: {level + 1}')
+    level_label.draw(shift_x = 5, shift_y = 5)
 
 
     
